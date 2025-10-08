@@ -118,7 +118,7 @@ impl RestartManager {
 }
 
 #[derive(Debug)]
-struct NetlinkEvent {
+struct StateChangeEvent {
     interface_idx: u32,
     interface_name: String,
     state: Option<CanState>,
@@ -133,7 +133,7 @@ async fn main() {
     println!("Bus-off timeout: {:?}", config.bus_off_timeout);
 
     // Create a channel for communication between the blocking netlink thread and async main loop
-    let (tx, mut rx) = mpsc::unbounded_channel::<NetlinkEvent>();
+    let (tx, mut rx) = mpsc::unbounded_channel::<StateChangeEvent>();
 
     // Spawn the blocking netlink iteration in a separate thread
     let netlink_handle = tokio::task::spawn_blocking(move || {
@@ -181,7 +181,7 @@ async fn main() {
 }
 
 /// Runs the blocking netlink monitoring loop
-fn netlink_monitoring_loop(tx: mpsc::UnboundedSender<NetlinkEvent>) {
+fn netlink_monitoring_loop(tx: mpsc::UnboundedSender<StateChangeEvent>) {
     use neli::{
         consts::{
             rtnl::{Ifla, Rtm},
@@ -213,7 +213,7 @@ fn netlink_monitoring_loop(tx: mpsc::UnboundedSender<NetlinkEvent>) {
                             .get_attribute(Ifla::Linkinfo)
                             .and_then(|attr| InterfaceCanParams::try_from(attr).ok()?.state);
 
-                        let event = NetlinkEvent {
+                        let event = StateChangeEvent {
                             interface_idx: idx,
                             interface_name: name,
                             state,
