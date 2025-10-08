@@ -1,0 +1,13 @@
+[Unit]
+Description=CAN Interface Monitor Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cansentinel
+Restart=always
+RestartSec=5
+SyslogIdentifier=cansentinel
+
+[Install]
+WantedBy=multi-user.target
