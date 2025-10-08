@@ -1,3 +1,8 @@
+//! cansentinel
+//!
+//! A daemon that monitors CAN interface state changes via netlink and automatically
+//! restarts interfaces that enter the bus-off state.
+
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use socketcan::{CanInterface, nl::CanState};
@@ -6,6 +11,12 @@ use tokio::{
     task::JoinHandle,
     time::sleep,
 };
+
+/// Hardware type for CAN interfaces in netlink
+const ARPHRD_CAN: u16 = 280;
+
+/// Default netlink group for link state changes
+const RTNLGRP_LINK: u32 = 1;
 
 /// Configuration for the daemon
 #[derive(Debug, Clone)]
@@ -189,19 +200,16 @@ fn netlink_monitoring_loop(tx: mpsc::UnboundedSender<NetlinkEvent>) {
     use socketcan::InterfaceCanParams;
     use std::process;
 
-    let mut s = socket::NlSocketHandle::connect(
-        NlFamily::Route,
-        Some(process::id() + 1),
-        /* RTNLGRP_LINK */ &[1],
-    )
-    .expect("Creating netlink socket failed");
+    let mut s =
+        socket::NlSocketHandle::connect(NlFamily::Route, Some(process::id() + 1), &[RTNLGRP_LINK])
+            .expect("Failed to create netlink socket");
 
     for next in s.iter::<Rtm, Ifinfomsg>(true) {
         match next {
             Ok(msg) => {
                 if let Ok(msg_payload) = msg.get_payload() {
-                    // Only process CAN interfaces (ARPHRD_CAN = 280)
-                    if u16::from(msg_payload.ifi_type) == 280 {
+                    // Only process CAN interfaces
+                    if u16::from(msg_payload.ifi_type) == ARPHRD_CAN {
                         let handle = msg_payload.rtattrs.get_attr_handle();
                         let idx = msg_payload.ifi_index as u32;
                         let name = handle
