@@ -200,26 +200,29 @@ fn netlink_monitoring_loop(tx: mpsc::UnboundedSender<NetlinkEvent>) {
         match next {
             Ok(msg) => {
                 if let Ok(msg_payload) = msg.get_payload() {
-                    let handle = msg_payload.rtattrs.get_attr_handle();
-                    let idx = msg_payload.ifi_index as u32;
-                    let name = handle
-                        .get_attr_payload_as_with_len::<String>(Ifla::Ifname)
-                        .unwrap_or_else(|_| "Unknown".to_string());
+                    // Only process CAN interfaces (ARPHRD_CAN = 280)
+                    if u16::from(msg_payload.ifi_type) == 280 {
+                        let handle = msg_payload.rtattrs.get_attr_handle();
+                        let idx = msg_payload.ifi_index as u32;
+                        let name = handle
+                            .get_attr_payload_as_with_len::<String>(Ifla::Ifname)
+                            .unwrap_or_else(|_| "Unknown".to_string());
 
-                    let state = handle
-                        .get_attribute(Ifla::Linkinfo)
-                        .and_then(|attr| InterfaceCanParams::try_from(attr).ok()?.state);
+                        let state = handle
+                            .get_attribute(Ifla::Linkinfo)
+                            .and_then(|attr| InterfaceCanParams::try_from(attr).ok()?.state);
 
-                    let event = NetlinkEvent {
-                        interface_idx: idx,
-                        interface_name: name,
-                        state,
-                    };
+                        let event = NetlinkEvent {
+                            interface_idx: idx,
+                            interface_name: name,
+                            state,
+                        };
 
-                    // Send the event to the main async loop
-                    if tx.send(event).is_err() {
-                        println!("Channel closed, stopping netlink monitoring");
-                        break;
+                        // Send the event to the main async loop
+                        if tx.send(event).is_err() {
+                            println!("Channel closed, stopping netlink monitoring");
+                            break;
+                        }
                     }
                 }
             }
