@@ -68,24 +68,17 @@ impl RestartManager {
                 interface_name, interface_idx
             );
 
-            match CanInterface::open(&interface_name) {
-                Ok(iface) => match iface.restart() {
-                    Ok(()) => {
-                        println!(
-                            "Successfully restarted interface {} ({})",
-                            interface_name, interface_idx
-                        );
-                    }
-                    Err(e) => {
-                        println!(
-                            "Interface {} ({}) restart failed: {}",
-                            interface_name, interface_idx, e
-                        );
-                    }
-                },
+            let iface = CanInterface::open_iface(interface_idx);
+            match iface.restart() {
+                Ok(()) => {
+                    println!(
+                        "Successfully restarted interface {} ({})",
+                        interface_name, interface_idx
+                    );
+                }
                 Err(e) => {
                     println!(
-                        "Failed to open interface {} ({}) for restart: {}",
+                        "Interface {} ({}) restart failed: {}",
                         interface_name, interface_idx, e
                     );
                 }
