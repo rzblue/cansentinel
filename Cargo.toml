@@ -5,5 +5,9 @@ edition = "2024"
 
 [dependencies]
 neli = "0.6.5"
-socketcan = "3.5.0"
+nix = "0.29"
+socketcan = { version = "3.5.0", features = ["async-io"] }
 tokio = { version = "1.0", features = ["rt-multi-thread", "sync", "time", "macros"] }
+
+[profile.release]
+# lto = "fat"
