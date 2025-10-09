@@ -89,26 +89,6 @@ impl RestartManager {
         // Store the task handle
         self.pending_tasks.write().await.insert(interface.idx, task);
     }
-
-    /// Cancel any pending restart for an interface
-    async fn cancel_restart(&self, interface: &CanInterfaceInfo) {
-        if let Some(task) = self.pending_tasks.write().await.remove(&interface.idx) {
-            task.abort();
-            println!("{}: cancelled pending restart", interface.name);
-        }
-    }
-
-    /// Cancel any pending restart for an interface with detailed logging
-    async fn cancel_restart_with_reason(&self, interface: &CanInterfaceInfo, new_state: CanState) {
-        if let Some(task) = self.pending_tasks.write().await.remove(&interface.idx) {
-            task.abort();
-            println!(
-                "{}: cancelled pending restart, state changed to {:?}",
-                interface.name,
-                state_to_log_string(new_state)
-            );
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -138,17 +118,6 @@ struct StateChangeEvent {
 struct CanErrorEvent {
     interface: CanInterfaceInfo,
     error_frame: CanErrorFrame,
-}
-
-fn state_to_log_string(state: CanState) -> &'static str {
-    match state {
-        CanState::ErrorActive => "error_active",
-        CanState::ErrorWarning => "error_warning",
-        CanState::ErrorPassive => "error_passive",
-        CanState::BusOff => "bus_off",
-        CanState::Stopped => "stopped",
-        CanState::Sleeping => "sleeping",
-    }
 }
 
 #[tokio::main]
