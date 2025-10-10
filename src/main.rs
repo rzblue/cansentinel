@@ -1,17 +1,37 @@
 //! cansentinel daemon
 //!
-//! A daemon that monitors CAN interface state changes via netlink and automatically
-//! restarts interfaces that enter the bus-off state.
+//! cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state.
 
 use cansentinel::{
-    monitoring::{monitor_interface_errors, monitor_netlink}, BusEvent, BusEventType, CanInterfaceInfo, Config, RestartManager
+    BusEvent, BusEventType, CanInterfaceInfo, Config, RestartManager,
+    monitoring::{monitor_interface_errors, monitor_netlink},
 };
+use clap::Parser;
+use std::time::Duration;
 use tokio::sync::mpsc;
+
+/// CAN interface monitor daemon that automatically restarts bus-off interfaces
+#[derive(Parser)]
+#[command(name = "cansentinel")]
+#[command(
+    about = "A daemon that monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state"
+)]
+struct Args {
+    /// CAN interface names to monitor (can be specified multiple times)
+    #[arg(short = 'i', long = "interface", action = clap::ArgAction::Append)]
+    interfaces: Vec<String>,
+
+    /// Bus-off timeout in milliseconds before restarting interface
+    #[arg(short = 't', long = "timeout", default_value = "1000")]
+    timeout_ms: u64,
+}
 
 #[tokio::main]
 async fn main() {
+    let args = Args::parse();
+
     // Configure interfaces to monitor
-    let config = Config::with_interfaces(vec!["can_s0".to_string(), "can_s1".to_string()]);
+    let config = Config::new(Duration::from_millis(args.timeout_ms), args.interfaces);
     let restart_manager = RestartManager::new();
 
     println!("Starting CAN interface monitor daemon");
@@ -56,20 +76,19 @@ async fn main() {
         match event.event_type {
             BusEventType::BusOff => {
                 println!(
-                "{}: bus_off, scheduling restart in {:?}",
-                event.interface.name, config.bus_off_timeout
-            );
-            restart_manager
-                .schedule_restart(event.interface, config.bus_off_timeout)
-                .await;
-            },
+                    "{}: bus_off, scheduling restart in {:?}",
+                    event.interface.name, config.bus_off_timeout
+                );
+                restart_manager
+                    .schedule_restart(event.interface, config.bus_off_timeout)
+                    .await;
+            }
             BusEventType::Restart | BusEventType::Stopped => {
                 // It may be better to just ignore these and let it fail.
                 // Todo: Log these
                 restart_manager.cancel_restart(&event.interface).await;
             }
         }
-            
     }
 
     for handle in error_handles {

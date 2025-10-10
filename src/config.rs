@@ -11,27 +11,11 @@ pub struct Config {
     pub interface_names: Vec<String>,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            bus_off_timeout: Duration::from_millis(1000),
-            interface_names: vec![],
-        }
-    }
-}
-
 impl Config {
-    /// Create a new configuration with custom interface names
-    pub fn with_interfaces(interface_names: Vec<String>) -> Self {
+    pub fn new(bus_off_timeout: Duration, interface_names: Vec<String>) -> Self {
         Self {
+            bus_off_timeout,
             interface_names,
-            ..Default::default()
         }
-    }
-
-    /// Set the bus-off timeout
-    pub fn with_timeout(mut self, timeout: Duration) -> Self {
-        self.bus_off_timeout = timeout;
-        self
     }
 }
