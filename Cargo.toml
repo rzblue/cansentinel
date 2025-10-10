@@ -12,3 +12,8 @@ neli = "0.6.5"
 nix = { version = "0.30.1", features = ["net"] }
 socketcan = { version = "3.5.0", features = ["async-io"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread", "sync", "time", "macros"] }
+
+[profile.release-lto]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
