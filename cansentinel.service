@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/cansentinel
+ExecStart=/usr/local/bin/cansentinel --delay-ms 1000
 Restart=always
 RestartSec=5
 SyslogIdentifier=cansentinel

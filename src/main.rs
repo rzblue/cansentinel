@@ -22,7 +22,7 @@ struct Args {
     interfaces: Vec<String>,
 
     /// Delay in milliseconds to wait before restarting interface
-    #[arg(short = 'd', long = "delay", default_value = "1000")]
+    #[arg(short = 'd', long = "delay-ms", default_value = "1000")]
     delay_ms: u64,
 
     /// Enable more verbose output
