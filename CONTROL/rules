@@ -1,0 +1,23 @@
+#!/bin/bash
+
+do_install() {
+  DESTDIR=/tmp/cansentinel
+  cargo install --no-track --target aarch64-unknown-linux-gnu --path . --root $DESTDIR/usr/local
+  install -D -m 0644 cansentinel.service $DESTDIR/etc/systemd/system/cansentinel.service
+  install -D -m 0644 systemcore/99-disable-autorestart.conf $DESTDIR/etc/systemd/system/limelight_canbusprocess.service.d/99-disable-autorestart.conf
+}
+
+do_clean() {
+  cargo clean
+}
+
+case $1 in
+  "build")
+    ;;
+  "install")
+    do_install
+    ;;
+  "clean")
+    do_clean
+    ;;
+esac

@@ -1,0 +1,5 @@
+Package: cansentinel
+Version: 0.1
+Architecture: aarch64
+Maintainer: Ryan Blue
+Description: cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state.

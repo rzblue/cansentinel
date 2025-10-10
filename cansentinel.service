@@ -3,7 +3,7 @@ Description=CAN Interface Monitor Daemon
 After=network.target
 
 [Service]
-Type=simple
+Type=exec
 ExecStart=/usr/local/bin/cansentinel
 Restart=always
 RestartSec=5

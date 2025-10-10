@@ -12,6 +12,7 @@ use tokio::sync::mpsc;
 
 #[derive(Parser)]
 #[command(name = "cansentinel")]
+#[command(version)]
 #[command(
     about = "cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state"
 )]

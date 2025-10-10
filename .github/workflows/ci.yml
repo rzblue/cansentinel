@@ -89,3 +89,39 @@ jobs:
         name: cansentinel-${{ matrix.target }}
         path: target/${{ matrix.target }}/release/cansentinel
         if-no-files-found: error
+
+  package-systemcore:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: aarch64-unknown-linux-gnu
+    
+    - name: Install cross-compilation tools
+      run: |
+        curl -fsSL https://github.com/LimelightVision/systemcore-os-public/releases/download/Limelight_SYSTEMCORE-169/systemcore-aarch64-toolchain.tar.gz | tar -xvzf - -C /opt
+        cd /opt/systemcore-aarch64-toolchain && ./relocate-sdk.sh
+
+    - name: Install opkg-utils
+      run: |
+        git clone https://git.yoctoproject.org/opkg-utils
+        cd opkg-utils
+        git checkout d179a334f7bfbe55dec4839607dac2c38f6b7c8f
+        sudo make install
+        cd ../
+        rm -rf opkg-utils
+
+    - uses: actions/checkout@v4
+
+    - name: Build IPK for Systemcore
+      run: fakeroot opkg-buildpackage
+      env:
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: /opt/systemcore-aarch64-toolchain/bin/aarch64-buildroot-linux-gnu-gcc
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: systemcore-ipk
+        path: ../cansentinel_*_aarch64.ipk
+        if-no-files-found: error
