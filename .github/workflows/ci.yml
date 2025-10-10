@@ -91,6 +91,7 @@ jobs:
         if-no-files-found: error
 
   package-systemcore:
+    name: Package IPK for Systemcore
     runs-on: ubuntu-latest
     steps:
     - name: Install Rust
@@ -100,7 +101,7 @@ jobs:
     
     - name: Install cross-compilation tools
       run: |
-        curl -fsSL https://github.com/LimelightVision/systemcore-os-public/releases/download/Limelight_SYSTEMCORE-169/systemcore-aarch64-toolchain.tar.gz | tar -xvzf - -C /opt
+        curl -fsSL https://github.com/LimelightVision/systemcore-os-public/releases/download/Limelight_SYSTEMCORE-169/systemcore-aarch64-toolchain.tar.gz | tar -xzf - -C /opt
         cd /opt/systemcore-aarch64-toolchain && ./relocate-sdk.sh
 
     - name: Install opkg-utils
@@ -123,5 +124,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: systemcore-ipk
-        path: ../cansentinel_*_aarch64.ipk
+        path: /home/runner/work/cansentinel/cansentinel_*_aarch64.ipk
         if-no-files-found: error
