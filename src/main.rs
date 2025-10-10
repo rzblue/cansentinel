@@ -69,15 +69,14 @@ async fn main() {
 
     for interface in interfaces {
         // Check initial interface status and restart if already in bus-off state
-        let can = CanInterface::open_iface(interface.idx);
-        if let Ok(status) = can.state() {
-            if let Some(CanState::BusOff) = status {
-                println!(
-                    "{}: already in bus-off state, restarting immediately",
-                    interface.name
-                );
-                restart_manager.schedule_restart(interface.clone(), Duration::from_millis(0)).await;
-            }
+        if let Ok(Some(CanState::BusOff)) = CanInterface::open_iface(interface.idx).state() {
+            println!(
+                "{}: already in bus-off state, restarting immediately",
+                interface.name
+            );
+            restart_manager
+                .schedule_restart(interface.clone(), Duration::from_millis(0))
+                .await;
         }
     }
 
