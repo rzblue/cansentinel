@@ -1,10 +1,10 @@
 //! Netlink-based CAN interface monitoring
 
 use crate::{
-    consts::{ARPHRD_CAN, RTNLGRP_LINK},
     events::{BusEvent, BusEventSource},
     interface::CanInterfaceInfo,
 };
+use nix::libc::{ARPHRD_CAN, RTNLGRP_LINK};
 use socketcan::{InterfaceCanParams, nl::CanState};
 use tokio::sync::mpsc;
 
