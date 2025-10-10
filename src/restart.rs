@@ -25,32 +25,37 @@ impl RestartManager {
         {
             let pending_tasks = self.pending_tasks.read().await;
             if pending_tasks.contains_key(&interface.idx) {
-                println!(
-                    "{}: restart already scheduled, ignoring duplicate bus-off",
-                    interface.name
-                );
                 return;
             }
         }
+        // Now we need to hold the lock until we add the task handle
+        let mut pending_tasks = self.pending_tasks.write().await;
 
-        let pending_tasks = Arc::clone(&self.pending_tasks);
+        // Check again in case another thread added a task between the locks
+        if pending_tasks.contains_key(&interface.idx) {
+            return;
+        }
+        println!(
+            "{}: bus_off, scheduling restart in {:?}",
+            interface.name, delay
+        );
+
+        let pending_tasks_arc = Arc::clone(&self.pending_tasks);
 
         // Store the interface index before moving interface into the task
         let interface_idx = interface.idx;
 
-        // Spawn a new delayed restart task
         let task = tokio::spawn(async move {
             tokio::time::sleep(delay).await;
 
             // Remove this task from pending tasks BEFORE executing restart
-            // This prevents race condition with netlink events caused by the restart
-            pending_tasks.write().await.remove(&interface.idx);
+            // This prevents race condition with events caused by the restart
+            pending_tasks_arc.write().await.remove(&interface.idx);
 
             do_restart(interface).await;
         });
 
-        // Store the task handle
-        self.pending_tasks.write().await.insert(interface_idx, task);
+        pending_tasks.insert(interface_idx, task);
     }
 
     /// Cancel any pending restart for an interface
@@ -81,7 +86,7 @@ async fn do_restart(interface: CanInterfaceInfo) {
 
     let iface = CanInterface::open_iface(interface.idx);
     match iface.restart() {
-        Ok(_) => println!("{}: restart successful", interface.name),
+        Ok(_) => (),
         Err(e) => println!("{}: restart failed: {}", interface.name, e),
     }
 }

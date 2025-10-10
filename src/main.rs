@@ -85,10 +85,6 @@ async fn main() {
     while let Some(event) = rx.recv().await {
         match event.event_type {
             BusEventType::BusOff => {
-                println!(
-                    "{}: bus_off, scheduling restart in {:?}",
-                    event.interface.name, config.bus_off_delay
-                );
                 restart_manager
                     .schedule_restart(event.interface, config.bus_off_delay)
                     .await;
