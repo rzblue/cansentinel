@@ -65,8 +65,6 @@ impl RestartManager {
 
         let pending_tasks = Arc::clone(&self.pending_tasks);
 
-        println!("{}: scheduling restart in {:?}", interface.name, delay);
-
         // Spawn a new delayed restart task
         let task = tokio::spawn(async move {
             sleep(delay).await;
