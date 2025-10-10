@@ -95,9 +95,8 @@ async fn main() {
                     .await;
             }
             BusEventType::Restart | BusEventType::Stopped => {
-                // It may be better to just ignore these and let it fail.
-                // Todo: Log these
-                restart_manager.cancel_restart(&event.interface).await;
+                // Just let pending restarts ride out.
+                // These can arrive in a weird order during a continuous bus short condition causing this to race
             }
         }
     }
