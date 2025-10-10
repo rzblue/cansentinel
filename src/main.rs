@@ -21,9 +21,9 @@ struct Args {
     #[arg(short = 'i', long = "interface", action = clap::ArgAction::Append, default_values = ["can*"])]
     interfaces: Vec<String>,
 
-    /// Bus-off timeout in milliseconds before restarting interface
-    #[arg(short = 't', long = "timeout", default_value = "1000")]
-    timeout_ms: u64,
+    /// Delay in milliseconds to wait before restarting interface
+    #[arg(short = 'd', long = "delay", default_value = "1000")]
+    delay_ms: u64,
 }
 
 #[tokio::main]
@@ -46,11 +46,11 @@ async fn main() {
     }
 
     // Configure interfaces to monitor
-    let config = Config::new(Duration::from_millis(args.timeout_ms), interfaces);
+    let config = Config::new(Duration::from_millis(args.delay_ms), interfaces);
     let restart_manager = RestartManager::new();
 
     println!("Starting CAN interface monitor daemon");
-    println!("Bus-off timeout: {:?}", config.bus_off_timeout);
+    println!("Bus-off delay: {:?}", config.bus_off_delay);
     println!(
         "Monitoring interfaces: {:?}",
         config
@@ -88,10 +88,10 @@ async fn main() {
             BusEventType::BusOff => {
                 println!(
                     "{}: bus_off, scheduling restart in {:?}",
-                    event.interface.name, config.bus_off_timeout
+                    event.interface.name, config.bus_off_delay
                 );
                 restart_manager
-                    .schedule_restart(event.interface, config.bus_off_timeout)
+                    .schedule_restart(event.interface, config.bus_off_delay)
                     .await;
             }
             BusEventType::Restart | BusEventType::Stopped => {
