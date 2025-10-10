@@ -23,6 +23,10 @@ struct Args {
     /// Delay in milliseconds to wait before restarting interface
     #[arg(short = 'd', long = "delay", default_value = "1000")]
     delay_ms: u64,
+
+    /// Enable more verbose output
+    #[arg(short = 'v', long = "verbose", action = clap::ArgAction::SetTrue)]
+    verbose: bool,
 }
 
 #[tokio::main]
@@ -67,7 +71,7 @@ async fn main() {
     // Start netlink monitoring
     let netlink_tx = tx.clone();
     let netlink_handle = tokio::task::spawn_blocking(move || {
-        monitor_netlink(netlink_tx);
+        monitor_netlink(netlink_tx, args.verbose);
     });
 
     // Start CAN error frame monitoring for each interface
@@ -76,7 +80,7 @@ async fn main() {
         let interface = interface.clone();
         let error_tx = tx.clone();
         let handle = tokio::spawn(async move {
-            monitor_interface_errors(error_tx, interface).await;
+            monitor_interface_errors(error_tx, interface, args.verbose).await;
         });
         error_handles.push(handle);
     }

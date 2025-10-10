@@ -12,6 +12,7 @@ use tokio::sync::mpsc;
 pub async fn monitor_interface_errors(
     tx: mpsc::UnboundedSender<BusEvent>,
     interface: CanInterfaceInfo,
+    verbose: bool,
 ) {
     loop {
         match CanSocket::open(&interface.name) {
@@ -33,7 +34,9 @@ pub async fn monitor_interface_errors(
                 loop {
                     match socket.read_frame().await {
                         Ok(CanFrame::Error(frame)) => {
-                            log_can_error(&interface, &frame);
+                            if verbose {
+                                log_can_error(&interface, &frame);
+                            }
 
                             let event = match frame.into_error() {
                                 CanError::BusOff => Some(BusEvent::bus_off(

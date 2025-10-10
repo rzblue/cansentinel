@@ -9,7 +9,7 @@ use socketcan::{InterfaceCanParams, nl::CanState};
 use tokio::sync::mpsc;
 
 /// Runs the blocking netlink monitoring loop
-pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>) {
+pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
     use neli::{
         consts::{
             rtnl::{Ifla, Rtm},
@@ -51,6 +51,14 @@ pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>) {
                             .and_then(|attr| InterfaceCanParams::try_from(attr).ok()?.state);
 
                         let interface = CanInterfaceInfo { idx, name };
+
+                        if verbose {
+                            println!(
+                                "Netlink: Interface {} (idx={}) state: {:?}",
+                                interface.name, interface.idx, state
+                            );
+                        }
+
                         let event = match state {
                             Some(CanState::BusOff) => Some(BusEvent::bus_off(
                                 interface,
