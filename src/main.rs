@@ -1,4 +1,4 @@
-//! cansentinel daemon
+//! cansentinel
 //!
 //! cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state.
 
@@ -10,11 +10,10 @@ use clap::Parser;
 use std::time::Duration;
 use tokio::sync::mpsc;
 
-/// CAN interface monitor daemon that automatically restarts bus-off interfaces
 #[derive(Parser)]
 #[command(name = "cansentinel")]
 #[command(
-    about = "A daemon that monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state"
+    about = "cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state"
 )]
 struct Args {
     /// CAN interface names to monitor (can be specified multiple times)
