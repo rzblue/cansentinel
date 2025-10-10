@@ -3,7 +3,7 @@
 //! cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state.
 
 use cansentinel::{
-    BusEvent, BusEventType, CanInterfaceInfo, Config, RestartManager,
+    BusEvent, BusEventType, Config, RestartManager, find_matching_interfaces,
     monitoring::{monitor_interface_errors, monitor_netlink},
 };
 use clap::Parser;
@@ -18,7 +18,7 @@ use tokio::sync::mpsc;
 )]
 struct Args {
     /// CAN interface names to monitor (can be specified multiple times)
-    #[arg(short = 'i', long = "interface", action = clap::ArgAction::Append)]
+    #[arg(short = 'i', long = "interface", action = clap::ArgAction::Append, default_values = ["can*"])]
     interfaces: Vec<String>,
 
     /// Bus-off timeout in milliseconds before restarting interface
@@ -30,26 +30,37 @@ struct Args {
 async fn main() {
     let args = Args::parse();
 
+    // Check if user specified their own interfaces or we're using defaults
+    let using_defaults = args.interfaces.len() == 1 && args.interfaces[0] == "can*";
+
+    // Resolve interface patterns to actual interface info
+    let interfaces = find_matching_interfaces(args.interfaces);
+
+    if interfaces.is_empty() {
+        if using_defaults {
+            println!("Error: No matching interfaces found for default pattern 'can*'");
+        } else {
+            println!("Error: No matching interfaces found for the specified patterns.");
+        }
+        return;
+    }
+
     // Configure interfaces to monitor
-    let config = Config::new(Duration::from_millis(args.timeout_ms), args.interfaces);
+    let config = Config::new(Duration::from_millis(args.timeout_ms), interfaces);
     let restart_manager = RestartManager::new();
 
     println!("Starting CAN interface monitor daemon");
     println!("Bus-off timeout: {:?}", config.bus_off_timeout);
-    println!("Monitoring interfaces: {:?}", config.interface_names);
+    println!(
+        "Monitoring interfaces: {:?}",
+        config
+            .interfaces
+            .iter()
+            .map(|i| &i.name)
+            .collect::<Vec<_>>()
+    );
 
-    // Look up interface indices early - only proceed with interfaces that exist
-    let interfaces: Vec<CanInterfaceInfo> = config
-        .interface_names
-        .iter()
-        .filter_map(|name| match CanInterfaceInfo::new(name) {
-            Ok(interface) => Some(interface),
-            Err(e) => {
-                println!("Could not get index for interface '{}': {}", name, e);
-                None
-            }
-        })
-        .collect();
+    let interfaces = &config.interfaces;
 
     // Create a unified channel for bus-off detection from both sources
     let (tx, mut rx) = mpsc::unbounded_channel::<BusEvent>();
@@ -62,7 +73,7 @@ async fn main() {
 
     // Start CAN error frame monitoring for each interface
     let mut error_handles = Vec::new();
-    for interface in &interfaces {
+    for interface in interfaces {
         let interface = interface.clone();
         let error_tx = tx.clone();
         let handle = tokio::spawn(async move {
