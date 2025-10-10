@@ -50,11 +50,11 @@ pub async fn monitor_interface_errors(
                                 _ => None,
                             };
 
-                            if let Some(event) = event {
-                                if tx.send(event).is_err() {
-                                    println!("Channel closed, stopping monitoring");
-                                    return;
-                                }
+                            if let Some(event) = event
+                                && tx.send(event).is_err()
+                            {
+                                println!("Channel closed, stopping monitoring");
+                                return;
                             }
                         }
                         Ok(_) => (), // Ignore non-error frames
