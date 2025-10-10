@@ -7,7 +7,7 @@ use cansentinel::{
     monitoring::{monitor_interface_errors, monitor_netlink},
 };
 use clap::Parser;
-use socketcan::{nl::CanState, CanInterface};
+use socketcan::{CanInterface, nl::CanState};
 use std::time::Duration;
 use tokio::sync::mpsc;
 
@@ -66,16 +66,17 @@ async fn main() {
     );
 
     let interfaces = &config.interfaces;
-    
+
     for interface in interfaces {
         // Check initial interface status and restart if already in bus-off state
         let can = CanInterface::open_iface(interface.idx);
         if let Ok(status) = can.state() {
             if let Some(CanState::BusOff) = status {
-                println!("{}: already in bus-off state, restarting immediately", interface.name);
-                if let Err(e) = can.restart() {
-                    println!("Failed to restart interface {}: {}", interface.name, e);
-                }
+                println!(
+                    "{}: already in bus-off state, restarting immediately",
+                    interface.name
+                );
+                restart_manager.schedule_restart(interface.clone(), Duration::from_millis(0)).await;
             }
         }
     }
