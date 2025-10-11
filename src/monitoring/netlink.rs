@@ -18,13 +18,9 @@ pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
         rtnl::Ifinfomsg,
         socket,
     };
-    use std::process;
-
-    // the socketcan crate explicitly uses the process ID so we need to use something different
-    let nl_pid = process::id() + 1;
 
     let mut s =
-        match socket::NlSocketHandle::connect(NlFamily::Route, Some(nl_pid), &[RTNLGRP_LINK]) {
+        match socket::NlSocketHandle::connect(NlFamily::Route, Some(0), &[RTNLGRP_LINK]) {
             Ok(socket) => socket,
             Err(e) => {
                 println!("Failed to create netlink socket: {:?}", e);

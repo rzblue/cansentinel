@@ -613,8 +613,7 @@ dependencies = [
 [[package]]
 name = "socketcan"
 version = "3.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7654092b2859221c29ac4b43dc502a8e156a7f2533e8617aaaa056b664d1230e"
+source = "git+https://github.com/rzblue/socketcan-rs?branch=netlink-pid-0#bacdb8aff1e56fe4fe083726a26040de8b0451c4"
 dependencies = [
  "async-io",
  "bitflags 2.9.4",
