@@ -1,6 +1,5 @@
 //! Configuration types
 
-use crate::CanInterfaceInfo;
 use std::time::Duration;
 
 /// Configuration for cansentinel
@@ -8,15 +7,15 @@ use std::time::Duration;
 pub struct Config {
     /// Delay before restarting a bus-off interface
     pub bus_off_delay: Duration,
-    /// List of CAN interfaces to monitor
-    pub interfaces: Vec<CanInterfaceInfo>,
+    /// List of CAN interface names to monitor
+    pub interface_names: Vec<String>,
 }
 
 impl Config {
-    pub fn new(bus_off_delay: Duration, interfaces: Vec<CanInterfaceInfo>) -> Self {
+    pub fn new(bus_off_delay: Duration, interface_names: Vec<String>) -> Self {
         Self {
             bus_off_delay,
-            interfaces,
+            interface_names,
         }
     }
 }
