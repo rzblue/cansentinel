@@ -48,9 +48,10 @@ impl RestartManager {
         let task = tokio::spawn(async move {
             tokio::time::sleep(delay).await;
 
-            // Remove this task from pending tasks BEFORE executing restart
-            // This prevents race condition with events caused by the restart
-            pending_tasks_arc.write().await.remove(&interface.idx);
+            // Performing the restart must be atomic with removing from the pending list.
+            // Hold lock until restart is done.
+            let mut pending_tasks = pending_tasks_arc.write().await;
+            pending_tasks.remove(&interface.idx);
 
             do_restart(interface);
         });
