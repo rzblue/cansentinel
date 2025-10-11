@@ -6,7 +6,7 @@ use std::time::Duration;
 #[derive(Debug, Clone)]
 pub struct Config {
     /// Delay before restarting a bus-off interface
-    pub bus_off_delay: Duration,
+    pub restart_delay: Duration,
     /// List of CAN interface names to monitor
     pub interface_names: Vec<String>,
 }
@@ -14,7 +14,7 @@ pub struct Config {
 impl Config {
     pub fn new(bus_off_delay: Duration, interface_names: Vec<String>) -> Self {
         Self {
-            bus_off_delay,
+            restart_delay: bus_off_delay,
             interface_names,
         }
     }

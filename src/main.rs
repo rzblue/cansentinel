@@ -72,8 +72,8 @@ async fn main() {
         std::process::exit(1);
     }
 
-    println!("Starting CAN interface monitor daemon");
-    println!("Bus-off delay: {:?}", config.bus_off_delay);
+    println!("Starting cansentinel");
+    println!("Restart delay: {:?}", config.restart_delay);
     println!("Monitoring interfaces: {:?}", config.interface_names);
 
     let restart_manager = RestartManager::new();
@@ -116,7 +116,7 @@ async fn main() {
         match event.event_type {
             BusEventType::BusOff => {
                 restart_manager
-                    .schedule_restart(event.interface, config.bus_off_delay)
+                    .schedule_restart(event.interface, config.restart_delay)
                     .await;
             }
             BusEventType::Restart | BusEventType::Stopped => {
