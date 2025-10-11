@@ -19,14 +19,13 @@ pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
         socket,
     };
 
-    let mut s =
-        match socket::NlSocketHandle::connect(NlFamily::Route, Some(0), &[RTNLGRP_LINK]) {
-            Ok(socket) => socket,
-            Err(e) => {
-                println!("Failed to create netlink socket: {:?}", e);
-                return;
-            }
-        };
+    let mut s = match socket::NlSocketHandle::connect(NlFamily::Route, Some(0), &[RTNLGRP_LINK]) {
+        Ok(socket) => socket,
+        Err(e) => {
+            println!("Failed to create netlink socket: {:?}", e);
+            return;
+        }
+    };
 
     println!("Started netlink monitoring for CAN interfaces");
 
