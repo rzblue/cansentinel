@@ -1,12 +1,14 @@
 [Unit]
 Description=CAN Interface Monitor Daemon
 After=network.target
+StartLimitIntervalSec=10s
+StartLimitBurst=20
 
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/cansentinel --delay-ms 1000
+ExecStart=/usr/local/bin/cansentinel -i can_s0 -i can_s1 -i can_s2 -i can_s3 -i can_s4 --delay-ms 1000
 Restart=always
-RestartSec=5
+RestartSec=1
 SyslogIdentifier=cansentinel
 
 [Install]
