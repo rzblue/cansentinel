@@ -7,13 +7,16 @@ use cansentinel::{
     monitoring::{monitor_interface_errors, monitor_netlink},
 };
 use clap::Parser;
+use git_version::git_version;
 use socketcan::{CanInterface, nl::CanState};
 use std::time::Duration;
 use tokio::sync::mpsc;
 
+const VERSION: &str = git_version!(prefix = concat!(env!("CARGO_PKG_VERSION"), "-"));
+
 #[derive(Parser)]
 #[command(name = "cansentinel")]
-#[command(version)]
+#[command(version = VERSION)]
 #[command(
     about = "cansentinel monitors CAN interface state changes and automatically restarts interfaces that enter the bus-off state"
 )]
@@ -72,7 +75,7 @@ async fn main() {
         std::process::exit(1);
     }
 
-    println!("Starting cansentinel");
+    println!("Starting cansentinel {VERSION}");
     println!("Restart delay: {:?}", config.restart_delay);
     println!("Monitoring interfaces: {:?}", config.interface_names);
 
