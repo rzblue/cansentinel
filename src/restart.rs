@@ -52,7 +52,7 @@ impl RestartManager {
             // This prevents race condition with events caused by the restart
             pending_tasks_arc.write().await.remove(&interface.idx);
 
-            do_restart(interface).await;
+            do_restart(interface);
         });
 
         pending_tasks.insert(interface_idx, task);
@@ -79,7 +79,7 @@ impl Default for RestartManager {
 }
 
 /// Performs the actual restart for a CAN interface
-async fn do_restart(interface: CanInterfaceInfo) {
+fn do_restart(interface: CanInterfaceInfo) {
     use socketcan::CanInterface;
 
     println!("{}: restarting interface", interface.name);
