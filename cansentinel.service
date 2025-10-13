@@ -5,7 +5,7 @@ StartLimitIntervalSec=10s
 StartLimitBurst=20
 
 [Service]
-Type=exec
+Type=notify
 ExecStart=/usr/local/bin/cansentinel -i can_s0 -i can_s1 -i can_s2 -i can_s3 -i can_s4 --delay-ms 1000
 Restart=always
 RestartSec=1

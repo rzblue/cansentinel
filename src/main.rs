@@ -94,6 +94,22 @@ async fn main() {
         }
     }
 
+    #[cfg(feature = "systemd")]
+    {
+        // This is where we are considered ready, for the purposes of service ordering
+        use libsystemd::daemon::{NotifyState, notify};
+        match notify(
+            false,
+            &[
+                NotifyState::Ready,
+                NotifyState::Status(format!("Monitoring {} CAN interfaces...", interfaces.len(),)),
+            ],
+        ) {
+            Ok(_) => (), // If this returns false, systemd isn't available and we don't care.
+            Err(e) => println!("Failed to notify systemd: {}", e),
+        }
+    }
+
     // Create a unified channel for bus-off detection from both sources
     let (tx, mut rx) = mpsc::unbounded_channel::<BusEvent>();
 
