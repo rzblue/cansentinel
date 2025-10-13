@@ -59,20 +59,20 @@ pub async fn monitor_interface_errors(
                         }
                         Ok(_) => (), // Ignore non-error frames
                         Err(e) => {
-                            println!("Error reading from {}: {}", interface.name, e);
+                            println!("{}: error reading from socket: {}", interface.name, e);
                             break;
                         }
                     }
                 }
             }
             Err(e) => {
-                println!("Failed to open error socket for {}: {}", interface.name, e);
+                println!("{}: failed to open socket: {}", interface.name, e);
             }
         }
 
         // Wait before retrying if the socket failed
         println!(
-            "{}: failed to open socket for monitoring. retrying in 5 seconds...",
+            "{}: failed to open or read from socket for monitoring. retrying in 5 seconds...",
             interface.name
         );
         tokio::time::sleep(Duration::from_secs(5)).await;
