@@ -2,7 +2,7 @@
 
 do_install() {
   DESTDIR=/tmp/cansentinel
-  export RUSTFLAGS="-C target-cpu=cortex-a76"
+  export RUSTFLAGS="-C target-cpu=cortex-a76 -C strip=symbols"
   cargo install --no-track --locked --target aarch64-unknown-linux-gnu --profile release-lto --path . --root $DESTDIR/usr/local
   install -D -m 0644 cansentinel.service $DESTDIR/etc/systemd/system/cansentinel.service
   install -D -m 0644 systemcore/99-disable-autorestart.conf $DESTDIR/etc/systemd/system/limelight_canbusprocess.service.d/99-disable-autorestart.conf
