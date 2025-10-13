@@ -100,8 +100,9 @@ async fn main() {
     let netlink_handle = {
         // Start netlink monitoring
         let netlink_tx = tx.clone();
+        let netlink_interfaces = interfaces.clone();
         tokio::task::spawn_blocking(move || {
-            monitor_netlink(netlink_tx, args.verbose);
+            monitor_netlink(netlink_tx, netlink_interfaces, args.verbose);
         })
     };
 

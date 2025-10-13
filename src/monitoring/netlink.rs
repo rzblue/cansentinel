@@ -9,7 +9,11 @@ use socketcan::{InterfaceCanParams, nl::CanState};
 use tokio::sync::mpsc;
 
 /// Runs the blocking netlink monitoring loop
-pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
+pub fn monitor_netlink(
+    tx: mpsc::UnboundedSender<BusEvent>,
+    interfaces: Vec<CanInterfaceInfo>,
+    verbose: bool,
+) {
     use neli::{
         consts::{
             rtnl::{Ifla, Rtm},
@@ -17,6 +21,12 @@ pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
         },
         rtnl::Ifinfomsg,
         socket,
+    };
+
+    let interfaces = {
+        let mut interfaces: Vec<u32> = interfaces.into_iter().map(|i| i.idx).collect();
+        interfaces.sort();
+        interfaces
     };
 
     let mut s = match socket::NlSocketHandle::connect(NlFamily::Route, Some(0), &[RTNLGRP_LINK]) {
@@ -34,7 +44,11 @@ pub fn monitor_netlink(tx: mpsc::UnboundedSender<BusEvent>, verbose: bool) {
             Ok(msg) => {
                 if let Ok(msg_payload) = msg.get_payload() {
                     // Only process CAN interfaces
-                    if u16::from(msg_payload.ifi_type) == ARPHRD_CAN {
+                    if u16::from(msg_payload.ifi_type) == ARPHRD_CAN
+                        && interfaces
+                            .binary_search(&(msg_payload.ifi_index as u32))
+                            .is_ok()
+                    {
                         let handle = msg_payload.rtattrs.get_attr_handle();
                         let idx = msg_payload.ifi_index as u32;
                         let name = handle
