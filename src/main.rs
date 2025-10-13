@@ -50,7 +50,7 @@ async fn main() {
         std::process::exit(1);
     }
 
-    let mut interfaces: Vec<CanInterfaceInfo> = Vec::new();
+    let mut interfaces: Vec<CanInterfaceInfo> = Vec::with_capacity(config.interface_names.len());
     let mut got_error = false;
     for name in &config.interface_names {
         match CanInterfaceInfo::new(name) {
@@ -97,22 +97,27 @@ async fn main() {
     // Create a unified channel for bus-off detection from both sources
     let (tx, mut rx) = mpsc::unbounded_channel::<BusEvent>();
 
-    // Start netlink monitoring
-    let netlink_tx = tx.clone();
-    let netlink_handle = tokio::task::spawn_blocking(move || {
-        monitor_netlink(netlink_tx, args.verbose);
-    });
+    let netlink_handle = {
+        // Start netlink monitoring
+        let netlink_tx = tx.clone();
+        tokio::task::spawn_blocking(move || {
+            monitor_netlink(netlink_tx, args.verbose);
+        })
+    };
 
     // Start CAN error frame monitoring for each interface
-    let mut error_handles = Vec::new();
-    for interface in &interfaces {
-        let interface = interface.clone();
-        let error_tx = tx.clone();
-        let handle = tokio::spawn(async move {
-            monitor_interface_errors(error_tx, interface, args.verbose).await;
-        });
-        error_handles.push(handle);
-    }
+    let error_handles = {
+        let mut handles = Vec::with_capacity(interfaces.capacity());
+        for interface in &interfaces {
+            let interface = interface.clone();
+            let error_tx = tx.clone();
+            let handle = tokio::spawn(async move {
+                monitor_interface_errors(error_tx, interface, args.verbose).await;
+            });
+            handles.push(handle);
+        }
+        handles
+    };
 
     // Main event loop - handle bus-off events from both sources
     while let Some(event) = rx.recv().await {
