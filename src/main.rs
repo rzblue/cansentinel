@@ -12,7 +12,7 @@ use socketcan::{CanInterface, nl::CanState};
 use std::time::Duration;
 use tokio::sync::mpsc;
 
-const VERSION: &str = git_version!(prefix = concat!(env!("CARGO_PKG_VERSION"), "-"));
+const VERSION: &str = git_version!(prefix = concat!(env!("CARGO_PKG_VERSION"), "-"), fallback = "unknown");
 
 #[derive(Parser)]
 #[command(name = "cansentinel")]

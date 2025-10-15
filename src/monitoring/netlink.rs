@@ -81,11 +81,11 @@ pub fn monitor_netlink(
                             _ => None,
                         };
 
-                        if let Some(event) = event
-                            && tx.send(event).is_err()
-                        {
-                            println!("Channel closed, stopping netlink monitoring");
-                            break;
+                        if let Some(event) = event {
+                            if tx.send(event).is_err() {
+                                println!("Channel closed, stopping netlink monitoring");
+                                break;
+                            }
                         }
                     }
                 }
